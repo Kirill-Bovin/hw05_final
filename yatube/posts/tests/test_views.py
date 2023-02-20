@@ -196,7 +196,6 @@ class FollowViewsTest(TestCase):
         Post.objects.create(author=cls.user_following, text='Тестовый пост')
 
     def setUp(self):
-        self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user_follower)
         cache.clear()
