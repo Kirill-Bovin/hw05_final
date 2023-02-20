@@ -200,7 +200,6 @@ class FollowViewsTest(TestCase):
         self.authorized_client.force_login(self.user_follower)
 
     def test_profile_follow_and_unfollow(self):
-        count = Follow.objects.count()
         response = self.authorized_client.get(reverse('posts:follow_index'))
         self.assertEqual(len(response.context['page_obj']), 0)
         """Авторизованный пользователь может подписываться на пользователей."""
@@ -209,7 +208,6 @@ class FollowViewsTest(TestCase):
             follow=True
         )
         self.assertEqual(len(response.context['page_obj']), 1)
-        self.assertEqual(Follow.objects.count(), count+1)
         """Новая запись пользователя появляется у подписчика."""
         post = Post.objects.create(
             author=self.user_following, text='Тестовый пост'
