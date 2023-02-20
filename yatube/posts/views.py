@@ -30,9 +30,14 @@ def profile(request, username):
     author = get_object_or_404(User, username=username)
     posts = author.posts.select_related('group')
     page_obj = paginate_func(request, posts)
+    following = False
+    if request.user.is_authenticated:
+        if Follow.objects.filter(user=request.user, author=author).exists():
+            following = True
     context = {
-        'author': author,
         'page_obj': page_obj,
+        'author': author,
+        'following': following
     }
     return render(request, 'posts/profile.html', context)
 
