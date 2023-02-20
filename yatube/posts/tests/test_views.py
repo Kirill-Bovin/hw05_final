@@ -7,7 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
-from ..models import Group, Post, User
+from ..models import Group, Post, User, Follow
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
@@ -198,9 +198,9 @@ class FollowViewsTest(TestCase):
     def setUp(self):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user_follower)
-        cache.clear()
 
     def test_profile_follow_and_unfollow(self):
+        count = Follow.objects.count()
         response = self.authorized_client.get(reverse('posts:follow_index'))
         self.assertEqual(len(response.context['page_obj']), 0)
         """Авторизованный пользователь может подписываться на пользователей."""
@@ -209,6 +209,8 @@ class FollowViewsTest(TestCase):
             follow=True
         )
         self.assertEqual(len(response.context['page_obj']), 1)
+        self.assertEqual(Follow.objects.count(), count+1)
+        
         """Новая запись пользователя появляется у подписчика."""
         post = Post.objects.create(
             author=self.user_following, text='Тестовый пост'
