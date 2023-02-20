@@ -210,7 +210,6 @@ class FollowViewsTest(TestCase):
         )
         self.assertEqual(len(response.context['page_obj']), 1)
         self.assertEqual(Follow.objects.count(), count+1)
-        
         """Новая запись пользователя появляется у подписчика."""
         post = Post.objects.create(
             author=self.user_following, text='Тестовый пост'
