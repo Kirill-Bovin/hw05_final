@@ -28,7 +28,6 @@ def group_posts(request, slug):
 
 def profile(request, username):
     author = get_object_or_404(User, username=username)
-    title = f"Профайл пользователя {author}"
     post_list = author.posts.all()
     page_obj = paginate_func(request, post_list)
     following = False
@@ -36,7 +35,6 @@ def profile(request, username):
         if Follow.objects.filter(user=request.user, author=author).exists():
             following = True
     context = {
-        'title': title,
         'page_obj': page_obj,
         'author': author,
         'following': following
