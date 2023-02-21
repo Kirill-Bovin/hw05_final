@@ -39,7 +39,7 @@ def profile(request, username):
         'title': title,
         'page_obj': page_obj,
         'author': author,
-        'following':following
+        'following': following
     }
     return render(request, 'posts/profile.html', context)
 
