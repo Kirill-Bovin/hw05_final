@@ -27,7 +27,6 @@ def group_posts(request, slug):
 
 
 def profile(request, username):
-    template = 'posts/profile.html'
     author = get_object_or_404(User, username=username)
     posts = author.posts.select_related('group')
     page_obj = paginate_func(request=request, posts=posts)
@@ -43,7 +42,7 @@ def profile(request, username):
         'page_obj': page_obj,
         'following': following,
     }
-    return render(request, template, context)
+    return render(request, 'posts/profile.html', context)
 
 
 def post_detail(request, post_id):
