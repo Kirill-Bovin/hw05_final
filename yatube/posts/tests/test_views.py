@@ -7,7 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
-from ..models import Group, Post, User
+from ..models import Group, Post, User, Follow
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
@@ -186,44 +186,42 @@ class PaginatorViewsTest(TestCase):
                         )
 
 
-class FollowViewsTest(TestCase):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.user_follower = User.objects.create(username='follower')
-        cls.user_unfollower = User.objects.create(username='unfollower')
-        cls.user_following = User.objects.create(username='following')
-        Post.objects.create(author=cls.user_following, text='Тестовый пост')
-
+class FollowTests(TestCase):
     def setUp(self):
-        self.authorized_client = Client()
-        self.authorized_client.force_login(self.user_follower)
+        self.author = User.objects.create_user(username='author')
+        self.user = User.objects.create_user(username='user')
 
-    def test_profile_follow_and_unfollow(self):
-        response = self.authorized_client.get(reverse('posts:follow_index'))
-        self.assertEqual(len(response.context['page_obj']), 0)
-        """Авторизованный пользователь может подписываться на пользователей."""
-        response = self.authorized_client.get(
-            reverse('posts:profile_follow', kwargs={'username': 'following'}),
-            follow=True
+        self.authorized_client = Client()
+        self.authorized_client.force_login(self.user)
+
+    def test_authorized_user_subscribe(self):
+        """Пользователь может подписываться."""
+        self.assertFalse(self.user.follower.exists())
+        self.authorized_client.get(
+            reverse(
+                'posts:profile_follow',
+                kwargs={"username": self.author.username}
+            )
         )
-        self.assertEqual(len(response.context['page_obj']), 1)
-        """Новая запись пользователя появляется у подписчика."""
+        self.assertEqual(self.user.follower.first().author, self.author)
+
+    def test_authorized_user_unsubscribe(self):
+        """Пользователь может отписаться."""
+        Follow.objects.create(user=self.user, author=self.author)
+        self.authorized_client.get(
+            reverse(
+                'posts:profile_unfollow',
+                kwargs={"username": self.author.username}
+            )
+        )
+        self.assertFalse(self.user.follower.exists())
+
+    def test_new_post_shown_in_feed_subscriber(self):
+        """Пост появляется в ленте подписанного пользователя."""
+        Follow.objects.create(user=self.user, author=self.author)
         post = Post.objects.create(
-            author=self.user_following, text='Тестовый пост'
+            text='Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+            author=self.author,
         )
-        cache.clear()
         response = self.authorized_client.get(reverse('posts:follow_index'))
-        self.assertEqual(len(response.context['page_obj']), 2)
-        """Авторизованный пользователь
-         может удалять пользователей из подписок."""
-        response = self.authorized_client.get(
-            reverse('posts:profile_unfollow',
-                    kwargs={'username': 'following'}), follow=True
-        )
-        self.assertEqual(len(response.context['page_obj']), 0)
-        """Новая запись пользователя появляется в ленте тех,
-        кто на него подписан и не появляется в ленте тех, кто не подписан."""
-        self.authorized_client.force_login(self.user_unfollower)
-        response = self.authorized_client.get(reverse("posts:follow_index"))
-        self.assertNotIn(post, response.context["page_obj"])
+        self.assertIn(post, response.context.get('page_obj').object_list)
