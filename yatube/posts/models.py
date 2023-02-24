@@ -44,7 +44,8 @@ class Post(models.Model):
     image = models.ImageField(
         verbose_name='Картинка',
         upload_to='posts/',
-        blank=True
+        blank=True,
+        null=True,
     )
 
     class Meta:
@@ -90,3 +91,9 @@ class Follow(models.Model):
         verbose_name='Автор',
         related_name='following'
     )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["user", "follower"],
+                                    name="user_folower")
+        ]
