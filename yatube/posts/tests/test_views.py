@@ -7,7 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
-from ..models import Group, Post, User, Follow
+from ..models import Follow, Group, Post, User
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
@@ -21,7 +21,7 @@ class PostsPagesTests(TestCase):
         cls.group = Group.objects.create(
             title='Тестовая группа',
             description='Тестовое описание',
-            slug='slug_slug'
+            slug='slug_slug',
         )
         cls.small_gif = (
             b'\x47\x49\x46\x38\x39\x61\x02\x00'
@@ -32,35 +32,20 @@ class PostsPagesTests(TestCase):
             b'\x0A\x00\x3B'
         )
         cls.uploaded = SimpleUploadedFile(
-            name='small.gif',
-            content=cls.small_gif,
-            content_type='image/gif'
+            name='small.gif', content=cls.small_gif, content_type='image/gif'
         )
         cls.post = Post.objects.create(
             text='test_post',
             author=cls.author,
             group=cls.group,
-            image=cls.uploaded
+            image=cls.uploaded,
         )
         cls.index_url = ('posts:index', None)
-        cls.profile_url = (
-            'posts:profile', [cls.post.author]
-        )
-        cls.post_detail_url = (
-            'posts:post_detail',
-            [cls.group.pk]
-        )
-        cls.edit_post_url = (
-            'posts:post_edit',
-            cls.post.pk
-        )
-        cls.new_post_url = (
-            'posts:post_create',
-        )
-        cls.group_url = (
-            'posts:group_posts',
-            cls.group.slug
-        )
+        cls.profile_url = ('posts:profile', [cls.post.author])
+        cls.post_detail_url = ('posts:post_detail', [cls.group.pk])
+        cls.edit_post_url = ('posts:post_edit', cls.post.pk)
+        cls.new_post_url = ('posts:post_create',)
+        cls.group_url = ('posts:group_posts', cls.group.slug)
 
     @classmethod
     def tearDownClass(cls):
@@ -115,8 +100,7 @@ class PostsPagesTests(TestCase):
     def test_post_added_correctly(self):
         """Проверка что пост появился там где и ожидался."""
         new_group = Group.objects.create(
-            title='Тестовая группа',
-            slug='test-slug2'
+            title='Тестовая группа', slug='test-slug2'
         )
         response = self.authorized.get(
             reverse('posts:group_list', args=[new_group.slug])
@@ -130,10 +114,7 @@ class PostsPagesTests(TestCase):
 
     def test_index_cache(self):
         response_1 = self.client.get(reverse('posts:index'))
-        Post.objects.create(
-            author=self.post.author,
-            text='Тестовый текст'
-        )
+        Post.objects.create(author=self.post.author, text='Тестовый текст')
         response_2 = self.client.get(reverse('posts:index'))
         self.assertEqual(response_1.content, response_2.content)
         cache.clear()
@@ -152,9 +133,14 @@ class PaginatorViewsTest(TestCase):
             description='Тестовое описание',
         )
         Post.objects.bulk_create(
-            [Post(author=cls.user, text=f'Тестовый пост {create_post}',
-             group=cls.group)
-                for create_post in range(settings.NUMBER_OF_ITERATIONS)]
+            [
+                Post(
+                    author=cls.user,
+                    text=f'Тестовый пост {create_post}',
+                    group=cls.group,
+                )
+                for create_post in range(settings.NUMBER_OF_ITERATIONS)
+            ]
         )
 
     def setUp(self):
@@ -165,9 +151,11 @@ class PaginatorViewsTest(TestCase):
     def test_paginator(self):
         """Тест пагинатора."""
         pages = (
-                (settings.FIRST_POST, settings.MAX_NUMB_ENTRIES),
-                (settings.SECOND_POST, settings.NUMBER_OF_ITERATIONS
-                 - settings.FIRST_OF_POSTS)
+            (settings.FIRST_POST, settings.MAX_NUMB_ENTRIES),
+            (
+                settings.SECOND_POST,
+                settings.NUMBER_OF_ITERATIONS - settings.FIRST_OF_POSTS,
+            ),
         )
         urls = (
             ('posts:index', None),
@@ -178,12 +166,14 @@ class PaginatorViewsTest(TestCase):
             with self.subTest(urls, args=args):
                 for page, count in pages:
                     with self.subTest(page):
-                        response = self.client.get(reverse(
-                            url, args=args), pages)
+                        response = self.client.get(
+                            reverse(url, args=args), pages
+                        )
                         self.assertEqual(
                             len(response.context['page_obj']),
-                            settings.FIRST_OF_POSTS
+                            settings.FIRST_OF_POSTS,
                         )
+                        cache.clear()
 
 
 class FollowTests(TestCase):
@@ -200,7 +190,7 @@ class FollowTests(TestCase):
         self.authorized_client.get(
             reverse(
                 'posts:profile_follow',
-                kwargs={"username": self.author.username}
+                kwargs={"username": self.author.username},
             )
         )
         self.assertEqual(self.user.follower.first().author, self.author)
@@ -211,7 +201,7 @@ class FollowTests(TestCase):
         self.authorized_client.get(
             reverse(
                 'posts:profile_unfollow',
-                kwargs={"username": self.author.username}
+                kwargs={"username": self.author.username},
             )
         )
         self.assertFalse(self.user.follower.exists())

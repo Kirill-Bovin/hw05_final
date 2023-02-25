@@ -28,7 +28,7 @@ class PostFormTests(TestCase):
         self.authorized_client.force_login(self.user)
 
     def test_post_create_form(self):
-        """"Тест формы отправки поста с картинкой."""
+        """ "Тест формы отправки поста с картинкой."""
         Post.objects.all().delete()
         posts_count = Post.objects.count()
         form_data = {
@@ -36,14 +36,11 @@ class PostFormTests(TestCase):
             'group': self.test_group.id,
         }
         response = self.authorized_client.post(
-            reverse('posts:post_create'),
-            data=form_data,
-            follow=True
+            reverse('posts:post_create'), data=form_data, follow=True
         )
         self.assertRedirects(
-            response, reverse(
-                'posts:profile',
-                kwargs={'username': self.user.username})
+            response,
+            reverse('posts:profile', kwargs={'username': self.user.username}),
         )
         self.assertEqual(Post.objects.count(), posts_count + 1)
         post = Post.objects.first()
@@ -52,27 +49,20 @@ class PostFormTests(TestCase):
         self.assertEqual(post.group_id, form_data['group'])
 
     def test_authorized_user_edit_post(self):
-        """"Авторизованный клиент редактирует пост и
+        """ "Авторизованный клиент редактирует пост и
         проверка что количество постов не увеличилось."""
         posts_count = Post.objects.count()
         new_group = Group.objects.create(
-            title='Тестовая группа',
-            slug='test-slug2'
+            title='Тестовая группа', slug='test-slug2'
         )
-        form_data = {
-            'text': 'post_text',
-            'group': new_group.id
-        }
+        form_data = {'text': 'post_text', 'group': new_group.id}
         response = self.authorized_client.post(
-            reverse(
-                'posts:post_edit',
-                args=(self.post.id,)),
+            reverse('posts:post_edit', args=(self.post.id,)),
             data=form_data,
-            follow=True
+            follow=True,
         )
         self.assertRedirects(
-            response,
-            reverse('posts:post_detail', args=(self.post.id,))
+            response, reverse('posts:post_detail', args=(self.post.id,))
         )
         post = Post.objects.first()
         self.assertEqual(Post.objects.count(), posts_count)
@@ -87,16 +77,14 @@ class PostFormTests(TestCase):
         self.assertNotIn(post, response.context['page_obj'])
 
     def test_guest_create_post(self):
-        """"Неавторизованный клиент создает пост с валидной формой."""
+        """ "Неавторизованный клиент создает пост с валидной формой."""
         posts_count = Post.objects.count()
         form_data = {
             'text': 'Текст поста',
             'group': self.test_group.id,
         }
         response = self.client.post(
-            reverse('posts:post_create'),
-            data=form_data,
-            follow=True
+            reverse('posts:post_create'), data=form_data, follow=True
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
         redirect = reverse('login') + '?next=' + reverse('posts:post_create')
@@ -104,41 +92,47 @@ class PostFormTests(TestCase):
         self.assertEqual(Group.objects.count(), posts_count)
 
     def test_create_comment(self):
-        ''''Авторизоавнный клиент может добавлять комментарий'''
+        ''' 'Авторизоавнный клиент может добавлять комментарий'''
         comments_count = self.post.comments.count()
-        form_data = {
-            'text': 'Новый комментарий'
-        }
+        form_data = {'text': 'Новый комментарий'}
         response = self.authorized_client.post(
-            (reverse('posts:add_comment',
-                     kwargs={'post_id': f'{self.post.id}'})),
+            (
+                reverse(
+                    'posts:add_comment', kwargs={'post_id': f'{self.post.id}'}
+                )
+            ),
             data=form_data,
-            follow=True
+            follow=True,
         )
-        self.assertRedirects(response, (reverse(
-            'posts:post_detail', kwargs={'post_id': f'{self.post.id}'})))
+        self.assertRedirects(
+            response,
+            (
+                reverse(
+                    'posts:post_detail', kwargs={'post_id': f'{self.post.id}'}
+                )
+            ),
+        )
         self.assertEqual(self.post.comments.count(), comments_count + 1)
         self.assertTrue(
-            self.post.comments.filter(
-                text='Новый комментарий').exists()
+            self.post.comments.filter(text='Новый комментарий').exists()
         )
 
     def test_anonimous_user_create_comment(self):
-        ''''Невторизованный клиент при создани комментария
+        ''' 'Невторизованный клиент при создани комментария
         попадает на страницу регистрации.'''
         comments_count = self.post.comments.count()
-        form_data = {
-            'text': 'Новый комментарий'
-        }
+        form_data = {'text': 'Новый комментарий'}
         response = self.client.post(
-            (reverse('posts:add_comment',
-                     kwargs={'post_id': f'{self.post.id}'})),
+            (
+                reverse(
+                    'posts:add_comment', kwargs={'post_id': f'{self.post.id}'}
+                )
+            ),
             data=form_data,
-            follow=True
+            follow=True,
         )
         self.assertRedirects(response, '/auth/login/?next=/posts/1/comment/')
         self.assertEqual(self.post.comments.count(), comments_count)
         self.assertFalse(
-            self.post.comments.filter(
-                text='Новый комментарий').exists()
+            self.post.comments.filter(text='Новый комментарий').exists()
         )

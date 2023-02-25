@@ -14,8 +14,8 @@
             <div class="card-body">
               {% include 'includes/block_mistakes.html' %}
               <form method="post"
-                    action="{% if form.instance.pk %} {% url "posts:post_edit" form.instance.pk %}
-                            {% else %} {% url "posts:post_create" %}{% endif %}">
+                action="{% if form.instance.pk %} {% url "posts:post_edit" form.instance.pk %}
+                {% else %} {% url "posts:post_create" %}{% endif %}">
                 {% csrf_token %}
                 {% include 'includes/code_form.html' %}
                 <label for="id_image">

@@ -1,7 +1,6 @@
-from django.contrib.auth import get_user_model
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import models
-
 
 User = get_user_model()
 
@@ -31,7 +30,7 @@ class Post(models.Model):
         null=True,
         on_delete=models.SET_NULL,
         related_name='posts',
-        help_text='Группа, к которой будет относиться пост'
+        help_text='Группа, к которой будет относиться пост',
     )
 
     author = models.ForeignKey(
@@ -54,7 +53,7 @@ class Post(models.Model):
         verbose_name_plural = 'Посты'
 
     def __str__(self) -> str:
-        return self.text[:settings.SLICE_END]
+        return self.text[: settings.SLICE_END]
 
 
 class Comment(models.Model):
@@ -62,16 +61,10 @@ class Comment(models.Model):
     text = models.TextField(verbose_name='Текст комментария')
     created = models.DateTimeField(auto_now_add=True)
     post = models.ForeignKey(
-        Post,
-        null=True,
-        on_delete=models.CASCADE,
-        related_name='comments'
+        Post, null=True, on_delete=models.CASCADE, related_name='comments'
     )
     author = models.ForeignKey(
-        User,
-        null=True,
-        on_delete=models.CASCADE,
-        related_name='comments'
+        User, null=True, on_delete=models.CASCADE, related_name='comments'
     )
 
     def __str__(self):
@@ -89,11 +82,12 @@ class Follow(models.Model):
         User,
         on_delete=models.CASCADE,
         verbose_name='Автор',
-        related_name='following'
+        related_name='following',
     )
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["user", "follower"],
-                                    name="user_folower")
+            models.UniqueConstraint(
+                fields=["user", "author"], name="user_author"
+            )
         ]

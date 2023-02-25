@@ -1,11 +1,13 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.cache import cache_page
 
 from .forms import CommentForm, PostForm
-from .models import Comment, Group, Post, User, Follow
+from .models import Comment, Follow, Group, Post, User
 from .utils import paginate_func
 
 
+@cache_page(20, key_prefix='index_page')
 def index(request):
     post_list = Post.objects.select_related('group', 'author')
     page_obj = paginate_func(request, post_list)
@@ -30,15 +32,12 @@ def profile(request, username):
     author = get_object_or_404(User, username=username)
     posts = author.posts.select_related('group')
     page_obj = paginate_func(request=request, posts=posts)
-    following = False
-    if request.user.is_authenticated:
-        following = Follow.objects.filter(
-            user=request.user,
-            author=author
-        ).exists()
+    following = (
+        request.user.is_authenticated
+        and Follow.objects.filter(user=request.user, author=author).exists()
+    )
     context = {
         'author': author,
-        'posts': posts,
         'page_obj': page_obj,
         'following': following,
     }
@@ -48,7 +47,7 @@ def profile(request, username):
 def post_detail(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
     comment = Comment.objects.filter(post=post)
-    form = CommentForm(request.POST or None)
+    form = CommentForm()
     context = {
         'post': post,
         'comment': comment,
@@ -60,16 +59,15 @@ def post_detail(request, post_id):
 @login_required
 def post_create(request):
     if request.method == 'POST':
-        form = PostForm(request.POST)
+        form = PostForm(request.POST or None, files=request.FILES or None)
         if form.is_valid():
             post = form.save(commit=False)
             post.author = request.user
             post.save()
             return redirect('posts:profile', request.user.username)
     form = PostForm()
-
     context = {
-        'form': form,
+        'form': PostForm()
     }
     return render(request, 'posts/create_post.html', context)
 
@@ -80,9 +78,7 @@ def post_edit(request, post_id):
     if request.user != edit_post.author:
         return redirect('posts:post_detail', post_id)
     form = PostForm(
-        request.POST or None,
-        files=request.FILES or None,
-        instance=edit_post
+        request.POST or None, files=request.FILES or None, instance=edit_post
     )
     if form.is_valid():
         form.save()
@@ -105,8 +101,7 @@ def add_comment(request, post_id):
 
 @login_required
 def follow_index(request):
-    post_list = Post.objects.filter(
-        author__following__user=request.user)
+    post_list = Post.objects.filter(author__following__user=request.user)
     context = {'page_obj': paginate_func(request, post_list)}
     return render(request, 'posts/follow.html', context)
 
@@ -115,15 +110,12 @@ def follow_index(request):
 def profile_follow(request, username):
     author = get_object_or_404(User, username=username)
     if request.user != author:
-        Follow.objects.get_or_create(
-            user=request.user,
-            author=author
-        )
+        Follow.objects.get_or_create(user=request.user, author=author)
     return redirect('posts:profile', username)
 
 
 @login_required
 def profile_unfollow(request, username):
-    Follow.objects.filter(
-        user=request.user, author__username=username).delete()
+    author = get_object_or_404(User, username=username)
+    Follow.objects.filter(author=author, user=request.user).delete()
     return redirect('posts:profile', username)

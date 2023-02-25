@@ -14,7 +14,7 @@ class URLTest(TestCase):
         cls.group = Group.objects.create(
             title='Тестовая Группа',
             slug='test_slug',
-            description='тестовое описание группы'
+            description='тестовое описание группы',
         )
         cls.user = User.objects.create_user(username='auth_user')
         cls.post = Post.objects.create(
@@ -29,26 +29,31 @@ class URLTest(TestCase):
         self.authorized_user = Client()
         self.authorized_user.force_login(self.user)
         self.list_adress = (
-            ('posts:index', None,
-             '/'),
-            ('posts:group_list', (self.group.slug,),
-             f'/group/{self.group.slug}/'),
-            ('posts:profile', (self.user,),
-             f'/profile/{self.user.username}/'),
-            ('posts:post_detail', (self.post.pk,),
-             f'/posts/{self.post.id}/'),
-            ('posts:post_create', None,
-             '/create/'),
-            ('posts:post_edit', (self.post.pk,),
-             f'/posts/{self.post.id}/edit/'),
+            ('posts:index', None, '/'),
+            (
+                'posts:group_list',
+                (self.group.slug,),
+                f'/group/{self.group.slug}/',
+            ),
+            ('posts:profile', (self.user,), f'/profile/{self.user.username}/'),
+            ('posts:post_detail', (self.post.pk,), f'/posts/{self.post.id}/'),
+            ('posts:post_create', None, '/create/'),
+            (
+                'posts:post_edit',
+                (self.post.pk,),
+                f'/posts/{self.post.id}/edit/',
+            ),
         )
         self.exception_name = (
             ('posts:post_edit', (self.post.pk,)),
-            ('posts:post_create', None,),
+            (
+                'posts:post_create',
+                None,
+            ),
         )
 
     def test_page_404(self):
-        """"Проверка кода 404 на несуществующую страницу."""
+        """ "Проверка кода 404 на несуществующую страницу."""
         response = self.client.get('/somethingstrange/', follow=True)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND.value)
 
@@ -79,7 +84,10 @@ class URLTest(TestCase):
                     )
                     self.assertRedirects(
                         response,
-                        reverse('posts:post_detail', args=[self.post.pk],)
+                        reverse(
+                            'posts:post_detail',
+                            args=[self.post.pk],
+                        ),
                     )
                 else:
                     response = self.authorized_user.get(
@@ -92,39 +100,34 @@ class URLTest(TestCase):
         что у неавторизованного пользователя
         есть доступ ко всем URL,
         кроме создания и редактирования поста."""
-        exception_name = (
-            'posts:post_edit',
-            'posts:post_create'
-        )
+        exception_name = ('posts:post_edit', 'posts:post_create')
         login_name = reverse('users:login')
         for name, args, url in self.list_adress:
             with self.subTest(name=name):
-                reverse_name = (reverse(name, args=args))
+                reverse_name = reverse(name, args=args)
                 if name in exception_name:
-                    reverse_name = (reverse(name, args=args))
-                    response = self.client.get(reverse(name, args=args),)
+                    reverse_name = reverse(name, args=args)
+                    response = self.client.get(
+                        reverse(name, args=args),
+                    )
                     self.assertRedirects(
                         response, f'{login_name}?next={reverse_name}'
                     )
                 else:
-                    response = self.client.get(reverse(name, args=args),)
+                    response = self.client.get(
+                        reverse(name, args=args),
+                    )
                     self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_pages_uses_correct_template_quest(self):
         """URL-адрес использует соответствующий шаблон"""
         url = (
-            ('posts:group_list', (self.group.slug,),
-             'posts/group_list.html'),
-            ('posts:index', None,
-             'posts/index.html'),
-            ('posts:profile', (self.author,),
-             'posts/profile.html'),
-            ('posts:post_detail', (self.post.pk,),
-             'posts/post_detail.html'),
-            ('posts:post_edit', (self.post.pk,),
-             'posts/create_post.html'),
-            ('posts:post_create', None,
-             'posts/create_post.html'),
+            ('posts:group_list', (self.group.slug,), 'posts/group_list.html'),
+            ('posts:index', None, 'posts/index.html'),
+            ('posts:profile', (self.author,), 'posts/profile.html'),
+            ('posts:post_detail', (self.post.pk,), 'posts/post_detail.html'),
+            ('posts:post_edit', (self.post.pk,), 'posts/create_post.html'),
+            ('posts:post_create', None, 'posts/create_post.html'),
         )
         for name, args, templates in url:
             with self.subTest(name=name):

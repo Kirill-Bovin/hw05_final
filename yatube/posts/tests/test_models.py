@@ -21,7 +21,7 @@ class PostModelTest(TestCase):
 
     def test_model_post_have_correct_object_names(self):
         '''Проверка длины __str__ на первые пятнадцать символов поста.'''
-        correct_object_names = self.post.text[:settings.FIRST_CHARACTERS_POST]
+        correct_object_names = self.post.text[: settings.FIRST_CHARACTERS_POST]
         self.assertEqual(correct_object_names, str(self.post))
 
     def test_model_group_have_correct_object_names(self):
@@ -30,7 +30,7 @@ class PostModelTest(TestCase):
         self.assertEqual(correct_object_names, str(self.group))
 
     def test_model_post_have_correct_verbose_names(self):
-        """"Проверка атрибута verbose_name."""
+        """ "Проверка атрибута verbose_name."""
         field_verboses = {
             'text': 'Текст поста',
             'pub_date': 'Дата',
@@ -40,10 +40,11 @@ class PostModelTest(TestCase):
         for field, correct in field_verboses.items():
             with self.subTest(field=field):
                 self.assertEqual(
-                    self.post._meta.get_field(field).verbose_name, correct)
+                    self.post._meta.get_field(field).verbose_name, correct
+                )
 
     def test_model_post_have_correct_help_text(self):
-        """"Проверка атрибута help_text."""
+        """ "Проверка атрибута help_text."""
         field_help_texts = {
             'text': 'Введите текст',
             'group': 'Группа, к которой будет относиться пост',
@@ -51,4 +52,5 @@ class PostModelTest(TestCase):
         for field, correct in field_help_texts.items():
             with self.subTest(field=field):
                 self.assertEqual(
-                    self.post._meta.get_field(field).help_text, correct)
+                    self.post._meta.get_field(field).help_text, correct
+                )

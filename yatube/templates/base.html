@@ -1,6 +1,6 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
-  {% load static %}
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,16 +14,14 @@
     <title>{% block title %} Записи сообщества {% endblock %} </title>
   </head>
   <body>
-    <header>
-      {% include 'includes/header.html' %}
-    </header>
+    {% include 'includes/header.html' %}
     <main>
-      {% block content %}
-        Конетент не подвезли
-      {% endblock %}
+      <div class="container">
+        {% block content %}
+          Конетент не подвезли
+        {% endblock %}
+      </div>
     </main>
-    <footer class="border-top text-center py-3">
-      {% include 'includes/footer.html' %}
-    </footer>
+    {% include 'includes/footer.html' %}
   </body>
 </html>

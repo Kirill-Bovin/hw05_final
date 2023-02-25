@@ -11,9 +11,9 @@
         <div class="card-body">
           {% include 'includes/block_mistakes.html' %}
           <form method="post"
-                {% if action_url %}
-                  action="{% url action_url %}"
-                {% endif %}
+            {% if action_url %}
+              action="{% url action_url %}"
+            {% endif %}
           >
             {% csrf_token %}
             {% include 'includes/code_form.html' %}
