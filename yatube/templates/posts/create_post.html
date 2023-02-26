@@ -3,26 +3,20 @@
   {% if form.instance.pk %}Редактировать пост{% else %}Новый пост{% endif %}
 {% endblock %}
 {% block content %}
-  <div class="container py-5">
-    <div class="row justify-content-center">
-      <div class="col-md-8 p-5">
-        <form method="post" enctype="multipart/form-data">
-          <div class="card">
-            <div class="card-header">
-              {% if form.instance.pk %}Редактировать пост{% else %}Новый пост{% endif %}
-            </div>
-            <div class="card-body">
-              {% include 'includes/block_mistakes.html' %}
-              <form method="post"
-                action="{% if form.instance.pk %} {% url "posts:post_edit" form.instance.pk %}
-                {% else %} {% url "posts:post_create" %}{% endif %}">
-                {% csrf_token %}
-                {% include 'includes/code_form.html' %}
-                <label for="id_image">
-                  Картинка
-                </label>
-                <input type="file" name="image" accept="image/*" class="form-control" id="id_image">
-              </div>
+  <div class="row justify-content-center">
+    <div class="col-md-8 p-5">
+      <form method="post" enctype="multipart/form-data">
+        <div class="card">
+          <div class="card-header">
+            {% if form.instance.pk %}Редактировать пост{% else %}Новый пост{% endif %}
+          </div>
+          <div class="card-body">
+            {% include 'includes/block_mistakes.html' %}
+            <form method="post"
+                  action="{% if form.instance.pk %} {% url "posts:post_edit" form.instance.pk %}
+                          {% else %} {% url "posts:post_create" %}{% endif %}">
+              {% csrf_token %}
+              {% include 'includes/code_form.html' %}
               <div class="d-flex justify-content-end">
                 <button type="submit" class="btn btn-primary">
                   {% if form.instance.pk %}
@@ -37,5 +31,4 @@
         </div>
       </div>
     </div>
-  </div>
 {% endblock %}

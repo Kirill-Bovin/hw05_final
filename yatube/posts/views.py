@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import cache_page
 
 from .forms import CommentForm, PostForm
-from .models import Comment, Follow, Group, Post, User
+from .models import Follow, Group, Post, User
 from .utils import paginate_func
 
 
@@ -46,11 +46,10 @@ def profile(request, username):
 
 def post_detail(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
-    comment = Comment.objects.filter(post=post)
     form = CommentForm()
     context = {
         'post': post,
-        'comment': comment,
+        'comments': post.comments.all(),
         'form': form,
     }
     return render(request, 'posts/post_detail.html', context, post_id)
@@ -58,14 +57,13 @@ def post_detail(request, post_id):
 
 @login_required
 def post_create(request):
+    form = PostForm(request.POST or None, files=request.FILES or None)
     if request.method == 'POST':
-        form = PostForm(request.POST or None, files=request.FILES or None)
         if form.is_valid():
             post = form.save(commit=False)
             post.author = request.user
             post.save()
             return redirect('posts:profile', request.user.username)
-    form = PostForm()
     context = {
         'form': PostForm()
     }
@@ -92,10 +90,10 @@ def add_comment(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     form = CommentForm(request.POST or None)
     if form.is_valid():
-        comment = form.save(commit=False)
-        comment.author = request.user
-        comment.post = post
-        comment.save()
+        comments = form.save(commit=False)
+        comments.author = request.user
+        comments.post = post
+        comments.save()
     return redirect('posts:post_detail', post_id=post_id)
 
 
