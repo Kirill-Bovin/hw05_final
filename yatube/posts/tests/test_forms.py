@@ -28,7 +28,7 @@ class PostFormTests(TestCase):
         self.authorized_client.force_login(self.user)
 
     def test_post_create_form(self):
-        """ "Тест формы отправки поста с картинкой."""
+        """Тест формы отправки поста."""
         Post.objects.all().delete()
         posts_count = Post.objects.count()
         form_data = {
@@ -49,8 +49,7 @@ class PostFormTests(TestCase):
         self.assertEqual(post.group_id, form_data['group'])
 
     def test_authorized_user_edit_post(self):
-        """ "Авторизованный клиент редактирует пост и
-        проверка что количество постов не увеличилось."""
+        """Автор поста может редактировать пост."""
         posts_count = Post.objects.count()
         new_group = Group.objects.create(
             title='Тестовая группа', slug='test-slug2'
@@ -77,7 +76,9 @@ class PostFormTests(TestCase):
         self.assertNotIn(post, response.context['page_obj'])
 
     def test_guest_create_post(self):
-        """ "Неавторизованный клиент создает пост с валидной формой."""
+        """Гостевой клиент создает пост.
+        И перенаправляется на страницу логина.
+        """
         posts_count = Post.objects.count()
         form_data = {
             'text': 'Текст поста',
@@ -92,7 +93,7 @@ class PostFormTests(TestCase):
         self.assertEqual(Group.objects.count(), posts_count)
 
     def test_create_comment(self):
-        ''' 'Авторизоавнный клиент может добавлять комментарий'''
+        """Авторизоавнный клиент может добавить комментарий."""
         comments_count = self.post.comments.count()
         form_data = {'text': 'Новый комментарий'}
         response = self.authorized_client.post(
@@ -118,8 +119,9 @@ class PostFormTests(TestCase):
         )
 
     def test_anonimous_user_create_comment(self):
-        ''' 'Невторизованный клиент при создани комментария
-        попадает на страницу регистрации.'''
+        """Гостевой клиент создает комментарий.
+        И попадает на страницу логина.
+        """
         comments_count = self.post.comments.count()
         form_data = {'text': 'Новый комментарий'}
         response = self.client.post(

@@ -112,6 +112,22 @@ class PostsPagesTests(TestCase):
         )
         self.assertIn(post, response.context['page_obj'])
 
+
+class IndexCache(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.author = User.objects.create_user(username='Test')
+        cls.post = Post.objects.create(
+            text='test_post',
+            author=cls.author,
+        )
+
+    def setUp(self):
+        self.authorized = Client()
+        self.authorized.force_login(self.author)
+        cache.clear()
+
     def test_index_cache(self):
         response_1 = self.client.get(reverse('posts:index'))
         Post.objects.create(author=self.post.author, text='Тестовый текст')
